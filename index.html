@@ -767,7 +767,7 @@
 <div class="alert" id="alert"></div>
 
 <script>
-const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
+const ANTHROPIC_API = 'https://corsproxy.io/?url=https://api.anthropic.com/v1/messages';
 
 function getApiKey() { return localStorage.getItem('cooper-api-key') || ''; }
 function saveApiKey(key) { localStorage.setItem('cooper-api-key', key); }
@@ -954,7 +954,7 @@ async function analyzePurchaseScreenshot() {
   try {
     const response = await fetch(ANTHROPIC_API, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-calls': 'true' },
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01',  },
       body: JSON.stringify({
         model: 'claude-opus-4-5',
         max_tokens: 1000,
@@ -1001,7 +1001,7 @@ async function analyzeManual() {
   try {
     const response = await fetch(ANTHROPIC_API, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-calls': 'true' },
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01',  },
       body: JSON.stringify({
         model: 'claude-opus-4-5',
         max_tokens: 600,
@@ -1045,7 +1045,7 @@ async function analyzeBalance() {
   try {
     const response = await fetch(ANTHROPIC_API, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-calls': 'true' },
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01',  },
       body: JSON.stringify({
         model: 'claude-opus-4-5',
         max_tokens: 400,

@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cooper's Finance Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #1a1a1a;
+    --border: #222222;
+    --border2: #2e2e2e;
+    --text: #f0ede8;
+    --text2: #888580;
+    --text3: #555250;
+    --green: #22c55e;
+    --green-dim: #16a34a22;
+    --amber: #f59e0b;
+    --amber-dim: #f59e0b18;
+    --red: #ef4444;
+    --red-dim: #ef444418;
+    --blue: #3b82f6;
+    --blue-dim: #3b82f618;
+    --accent: #22c55e;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+ 
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+ 
+  .grain {
+    position: fixed; inset: 0; pointer-events: none; z-index: 100; opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  }
+ 
+  header {
+    padding: 24px 28px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+ 
+  .logo {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--green);
+    letter-spacing: 0.05em;
+  }
+ 
+  .logo span { color: var(--text3); }
+ 
+  .last-updated {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+  }
+ 
+  main { padding: 24px 28px; max-width: 900px; margin: 0 auto; }
+ 
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    margin-top: 28px;
+  }
+ 
+  .section-label:first-child { margin-top: 0; }
+ 
+  /* Balance grid */
+  .balance-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+ 
+  .balance-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+ 
+  .balance-card:hover { border-color: var(--border2); }
+ 
+  .balance-card .label {
+    font-size: 11px;
+    color: var(--text3);
+    font-family: var(--mono);
+    margin-bottom: 6px;
+  }
+ 
+  .balance-card .amount {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text);
+  }
+ 
+  .balance-card .sub {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 3px;
+  }
+ 
+  /* Total liquid card */
+  .total-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 10px;
+  }
+ 
+  .total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 14px;
+  }
+ 
+  .total-label { font-size: 13px; color: var(--text2); }
+ 
+  .total-amount {
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight: 500;
+    color: var(--text);
+  }
+ 
+  .buffer-bar-wrap {
+    background: var(--surface2);
+    border-radius: 4px;
+    height: 6px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+ 
+  .buffer-bar {
+    height: 100%;
+    border-radius: 4px;
+    background: var(--green);
+    transition: width 0.5s ease;
+  }
+ 
+  .buffer-labels {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+  }
+ 
+  .buffer-labels .spendable { color: var(--green); }
+  .buffer-labels .locked { color: var(--amber); }
+ 
+  /* Invested card */
+  .invested-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+ 
+  .invested-card .left .name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+ 
+  .invested-card .left .note {
+    font-size: 11px;
+    color: var(--text3);
+  }
+ 
+  .invested-card .amount {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--blue);
+  }
+ 
+  .lock-badge {
+    font-size: 10px;
+    font-family: var(--mono);
+    background: var(--blue-dim);
+    color: var(--blue);
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-left: 10px;
+  }
+ 
+  /* Upcoming expenses */
+  .expense-list { display: flex; flex-direction: column; gap: 8px; }
+ 
+  .expense-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+ 
+  .expense-item .name { font-size: 14px; color: var(--text); }
+  .expense-item .note { font-size: 11px; color: var(--text3); margin-top: 1px; }
+ 
+  .expense-item .amount {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 500;
+  }
+ 
+  .badge {
+    font-size: 10px;
+    font-family: var(--mono);
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-right: 10px;
+  }
+ 
+  .badge-soon { background: var(--amber-dim); color: var(--amber); }
+  .badge-recurring { background: var(--blue-dim); color: var(--blue); }
+  .badge-future { background: var(--surface2); color: var(--text3); }
+ 
+  /* AI Section */
+  .ai-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+ 
+  .ai-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+  }
+ 
+  .ai-tab {
+    flex: 1;
+    padding: 12px;
+    text-align: center;
+    font-size: 12px;
+    font-family: var(--mono);
+    color: var(--text3);
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    transition: all 0.15s;
+    letter-spacing: 0.05em;
+  }
+ 
+  .ai-tab.active {
+    color: var(--green);
+    background: var(--green-dim);
+  }
+ 
+  .ai-tab:hover:not(.active) { color: var(--text2); background: var(--surface2); }
+ 
+  .ai-panel { padding: 20px; display: none; }
+  .ai-panel.active { display: block; }
+ 
+  .upload-zone {
+    border: 1px dashed var(--border2);
+    border-radius: 8px;
+    padding: 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: 14px;
+  }
+ 
+  .upload-zone:hover { border-color: var(--green); background: var(--green-dim); }
+ 
+  .upload-zone .icon {
+    font-size: 28px;
+    margin-bottom: 8px;
+    opacity: 0.5;
+  }
+ 
+  .upload-zone .label {
+    font-size: 13px;
+    color: var(--text2);
+    margin-bottom: 4px;
+  }
+ 
+  .upload-zone .sub {
+    font-size: 11px;
+    color: var(--text3);
+    font-family: var(--mono);
+  }
+ 
+  .upload-zone img {
+    max-width: 100%;
+    max-height: 200px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+  }
+ 
+  input[type="file"] { display: none; }
+ 
+  .input-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+ 
+  .input-row input, .manual-input {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+ 
+  .input-row input:focus, .manual-input:focus { border-color: var(--green); }
+ 
+  .input-row input::placeholder, .manual-input::placeholder { color: var(--text3); }
+ 
+  .price-input { width: 130px !important; flex-shrink: 0; }
+ 
+  .btn {
+    background: var(--green);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: var(--sans);
+    cursor: pointer;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+  }
+ 
+  .btn:hover { opacity: 0.85; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+ 
+  .btn-outline {
+    background: transparent;
+    color: var(--text2);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 13px;
+    font-family: var(--sans);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+ 
+  .btn-outline:hover { border-color: var(--text2); color: var(--text); }
+ 
+  /* AI Result */
+  .ai-result {
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 14px;
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+ 
+  .ai-result.show { display: block; }
+ 
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+ 
+  .verdict {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+ 
+  .verdict.buy { color: var(--green); }
+  .verdict.wait { color: var(--amber); }
+  .verdict.no { color: var(--red); }
+ 
+  .ai-reasoning { font-size: 13px; color: var(--text2); line-height: 1.7; }
+ 
+  .result-green { background: var(--green-dim); border: 1px solid #22c55e33; }
+  .result-amber { background: var(--amber-dim); border: 1px solid #f59e0b33; }
+  .result-red { background: var(--red-dim); border: 1px solid #ef444433; }
+ 
+  /* Loading */
+  .loading {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 0;
+    font-size: 13px;
+    color: var(--text3);
+    font-family: var(--mono);
+  }
+ 
+  .loading.show { display: flex; }
+ 
+  .spinner {
+    width: 16px; height: 16px;
+    border: 1.5px solid var(--border2);
+    border-top-color: var(--green);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+ 
+  @keyframes spin { to { transform: rotate(360deg); } }
+ 
+  /* Purchase history */
+  .history-list { display: flex; flex-direction: column; gap: 6px; }
+ 
+  .history-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+ 
+  .history-item .name { font-size: 13px; color: var(--text); }
+  .history-item .date { font-size: 11px; color: var(--text3); font-family: var(--mono); margin-top: 1px; }
+ 
+  .history-item .right { text-align: right; }
+ 
+  .history-item .amount {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--red);
+  }
+ 
+  .history-verdict {
+    font-size: 10px;
+    font-family: var(--mono);
+    margin-top: 2px;
+  }
+ 
+  .history-verdict.buy { color: var(--green); }
+  .history-verdict.wait { color: var(--amber); }
+  .history-verdict.no { color: var(--red); }
+ 
+  .empty-state {
+    text-align: center;
+    padding: 24px;
+    color: var(--text3);
+    font-size: 13px;
+    font-family: var(--mono);
+  }
+ 
+  /* Edit modal */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    backdrop-filter: blur(4px);
+  }
+ 
+  .modal-overlay.show { display: flex; }
+ 
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    padding: 24px;
+    width: 340px;
+    animation: fadeIn 0.2s ease;
+  }
+ 
+  .modal h3 {
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+ 
+  .modal .sub {
+    font-size: 12px;
+    color: var(--text3);
+    margin-bottom: 18px;
+    font-family: var(--mono);
+  }
+ 
+  .modal label {
+    display: block;
+    font-size: 11px;
+    color: var(--text3);
+    font-family: var(--mono);
+    margin-bottom: 5px;
+    margin-top: 12px;
+  }
+ 
+  .modal input {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    outline: none;
+    width: 100%;
+    transition: border-color 0.15s;
+  }
+ 
+  .modal input:focus { border-color: var(--green); }
+ 
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+  }
+ 
+  .modal-actions .btn { flex: 1; }
+  .modal-actions .btn-outline { flex: 1; }
+ 
+  /* Alert */
+  .alert {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--text);
+    z-index: 300;
+    display: none;
+    animation: slideUp 0.3s ease;
+    font-family: var(--mono);
+  }
+ 
+  .alert.show { display: block; }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+ 
+  /* Rules strip */
+  .rules-strip {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+ 
+  .rule-pill {
+    font-size: 11px;
+    font-family: var(--mono);
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: var(--surface2);
+    color: var(--text3);
+    border: 1px solid var(--border);
+  }
+ 
+  .rule-pill.ok { border-color: #22c55e33; color: var(--green); background: var(--green-dim); }
+  .rule-pill.warn { border-color: #f59e0b33; color: var(--amber); background: var(--amber-dim); }
+ 
+  @media (max-width: 600px) {
+    .balance-grid { grid-template-columns: 1fr 1fr; }
+    main { padding: 16px; }
+    header { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="grain"></div>
+ 
+<header>
+  <div class="logo">cooper<span>/</span>finance</div>
+  <div class="last-updated" id="last-updated">—</div>
+</header>
+ 
+<main>
+ 
+  <!-- Liquid Balances -->
+  <div class="section-label">liquid cash</div>
+  <div class="balance-grid">
+    <div class="balance-card" onclick="openEdit('fidelity')" title="Click to edit">
+      <div class="label">fidelity debit</div>
+      <div class="amount" id="val-fidelity">$0.00</div>
+      <div class="sub">tap to update</div>
+    </div>
+    <div class="balance-card" onclick="openEdit('cash')" title="Click to edit">
+      <div class="label">physical cash</div>
+      <div class="amount" id="val-cash">$0.00</div>
+      <div class="sub">tap to update</div>
+    </div>
+    <div class="balance-card" onclick="openEdit('online')" title="Click to edit">
+      <div class="label">online account</div>
+      <div class="amount" id="val-online">$0.00</div>
+      <div class="sub">tap to update</div>
+    </div>
+  </div>
+ 
+  <!-- Total + buffer -->
+  <div class="total-card">
+    <div class="total-row">
+      <span class="total-label">total liquid</span>
+      <span class="total-amount" id="val-total">$0.00</span>
+    </div>
+    <div class="buffer-bar-wrap">
+      <div class="buffer-bar" id="buffer-bar" style="width:60%"></div>
+    </div>
+    <div class="buffer-labels">
+      <span class="spendable" id="lbl-spendable">spendable: $0.00</span>
+      <span class="locked" id="lbl-locked">locked (40%): $0.00</span>
+    </div>
+    <div class="rules-strip" id="rules-strip"></div>
+  </div>
+ 
+  <!-- Invested -->
+  <div class="section-label">invested</div>
+  <div class="invested-card">
+    <div class="left">
+      <div class="name">Fidelity brokerage <span class="lock-badge">LOCKED</span></div>
+      <div class="note">do not withdraw — compounding</div>
+    </div>
+    <div class="amount" id="val-invested">$1,644.33</div>
+  </div>
+ 
+  <!-- Upcoming expenses -->
+  <div class="section-label" style="display:flex;justify-content:space-between;align-items:center">
+    <span>upcoming expenses & savings goals</span>
+    <button class="btn-outline" onclick="openAddExpense()" style="padding:4px 12px;font-size:11px;font-family:var(--mono)">+ add</button>
+  </div>
+  <div class="expense-list" id="expense-list"></div>
+ 
+  <!-- AI Section -->
+  <div class="section-label">ai advisor</div>
+  <div class="ai-card">
+    <div class="ai-tabs">
+      <button class="ai-tab active" onclick="switchTab('screenshot')" id="tab-screenshot">screenshot upload</button>
+      <button class="ai-tab" onclick="switchTab('manual')" id="tab-manual">manual input</button>
+      <button class="ai-tab" onclick="switchTab('balance')" id="tab-balance">update balance</button>
+    </div>
+ 
+    <!-- Screenshot panel -->
+    <div class="ai-panel active" id="panel-screenshot">
+      <input type="file" id="purchase-file" accept="image/*" onchange="handlePurchaseImage(event)">
+      <div class="upload-zone" onclick="document.getElementById('purchase-file').click()" id="purchase-zone">
+        <div class="icon">📸</div>
+        <div class="label">Upload purchase screenshot</div>
+        <div class="sub">receipt / cart / order confirmation</div>
+      </div>
+      <button class="btn" id="analyze-btn" onclick="analyzePurchaseScreenshot()" disabled>analyze purchase</button>
+      <div class="loading" id="loading-screenshot"><div class="spinner"></div>analyzing your purchase...</div>
+      <div class="ai-result" id="result-screenshot"></div>
+    </div>
+ 
+    <!-- Manual panel -->
+    <div class="ai-panel" id="panel-manual">
+      <div class="input-row">
+        <input type="text" id="item-name" class="manual-input" placeholder="What do you want to buy?" style="flex:1">
+        <input type="number" id="item-price" class="manual-input price-input" placeholder="$0.00" min="0" step="0.01">
+      </div>
+      <button class="btn" onclick="analyzeManual()">analyze purchase</button>
+      <div class="loading" id="loading-manual"><div class="spinner"></div>checking your budget...</div>
+      <div class="ai-result" id="result-manual"></div>
+    </div>
+ 
+    <!-- Balance update panel -->
+    <div class="ai-panel" id="panel-balance">
+      <input type="file" id="balance-file" accept="image/*" onchange="handleBalanceImage(event)">
+      <div class="upload-zone" onclick="document.getElementById('balance-file').click()" id="balance-zone">
+        <div class="icon">📊</div>
+        <div class="label">Upload Fidelity balance screenshot</div>
+        <div class="sub">screenshot your fidelity app balance</div>
+      </div>
+      <button class="btn" id="balance-btn" onclick="analyzeBalance()" disabled>extract balances</button>
+      <div class="loading" id="loading-balance"><div class="spinner"></div>reading your balance...</div>
+      <div class="ai-result" id="result-balance"></div>
+    </div>
+  </div>
+ 
+  <!-- Purchase History -->
+  <div class="section-label">purchase history</div>
+  <div class="history-list" id="history-list">
+    <div class="empty-state">no purchases logged yet</div>
+  </div>
+ 
+</main>
+ 
+<!-- Edit Modal -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal">
+    <h3 id="modal-title">Update balance</h3>
+    <div class="sub" id="modal-sub">enter new amount</div>
+    <label id="modal-label">amount ($)</label>
+    <input type="number" id="modal-input" placeholder="0.00" min="0" step="0.01">
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="closeModalDirect()">cancel</button>
+      <button class="btn" onclick="saveBalance()">save</button>
+    </div>
+  </div>
+</div>
+ 
+<!-- Expense Modal -->
+<div class="modal-overlay" id="expense-modal" onclick="closeExpenseModal(event)">
+  <div class="modal">
+    <h3 id="expense-modal-title">Add expense / goal</h3>
+    <div class="sub">track what you need to save for</div>
+    <label>name</label>
+    <input type="text" id="expense-name" placeholder="e.g. Laptop, Nike shoes..." style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;color:var(--text);font-family:var(--sans);font-size:14px;outline:none;width:100%">
+    <label>amount ($)</label>
+    <input type="number" id="expense-amount" placeholder="0.00" min="0" step="0.01" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;color:var(--text);font-family:var(--mono);font-size:14px;outline:none;width:100%">
+    <label>type</label>
+    <select id="expense-type" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;color:var(--text);font-family:var(--sans);font-size:14px;outline:none;width:100%">
+      <option value="soon">soon — buying shortly</option>
+      <option value="recurring">recurring — regular expense</option>
+      <option value="future">future — saving toward</option>
+    </select>
+    <label>note (optional)</label>
+    <input type="text" id="expense-note" placeholder="e.g. every 2 months, for school..." style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;color:var(--text);font-family:var(--sans);font-size:14px;outline:none;width:100%">
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="closeExpenseModalDirect()">cancel</button>
+      <button class="btn" onclick="saveExpense()">save</button>
+    </div>
+  </div>
+</div>
+ 
+<!-- Alert -->
+<div class="alert" id="alert"></div>
+ 
+<script>
+const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
+ 
+const DEFAULT_STATE = {
+  fidelity: 601.98,
+  cash: 70.00,
+  online: 69.68,
+  invested: 1644.33,
+  lastUpdated: null,
+  history: [
+    { name: 'Livho clear frame + gaming lens', amount: 14.39, verdict: 'buy', date: '2026-04-07' },
+    { name: 'Livho black frame + clear lens', amount: 12.98, verdict: 'buy', date: '2026-04-07' }
+  ],
+  expenses: [
+    { id: 1, name: 'Essential oils', amount: 40, type: 'soon', note: 'next purchase' },
+    { id: 2, name: 'Vitamins & creatine', amount: 30, type: 'recurring', note: 'every 2 months' },
+    { id: 3, name: 'Laptop', amount: 375, type: 'future', note: 'saving toward — not imminent' }
+  ]
+};
+ 
+let state = JSON.parse(localStorage.getItem('cooper-finance')) || DEFAULT_STATE;
+let currentEditKey = null;
+let purchaseImageData = null;
+let balanceImageData = null;
+ 
+function save() {
+  localStorage.setItem('cooper-finance', JSON.stringify(state));
+}
+ 
+function formatMoney(n) {
+  return '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+ 
+function render() {
+  const total = state.fidelity + state.cash + state.online;
+  const locked = total * 0.4;
+  const spendable = total * 0.6;
+  const spendablePct = 60;
+ 
+  document.getElementById('val-fidelity').textContent = formatMoney(state.fidelity);
+  document.getElementById('val-cash').textContent = formatMoney(state.cash);
+  document.getElementById('val-online').textContent = formatMoney(state.online);
+  document.getElementById('val-total').textContent = formatMoney(total);
+  document.getElementById('val-invested').textContent = formatMoney(state.invested);
+  document.getElementById('buffer-bar').style.width = spendablePct + '%';
+  document.getElementById('lbl-spendable').textContent = 'spendable: ' + formatMoney(spendable);
+  document.getElementById('lbl-locked').textContent = 'locked (40%): ' + formatMoney(locked);
+ 
+  if (state.lastUpdated) {
+    document.getElementById('last-updated').textContent = 'updated ' + state.lastUpdated;
+  }
+ 
+  const strip = document.getElementById('rules-strip');
+  strip.innerHTML = '';
+  const pills = [
+    { label: 'no regular income', cls: 'warn' },
+    { label: total > locked * 1.5 ? 'buffer healthy' : 'buffer tight', cls: total > locked * 1.5 ? 'ok' : 'warn' },
+    { label: 'invested locked', cls: 'ok' }
+  ];
+  pills.forEach(p => {
+    const el = document.createElement('span');
+    el.className = 'rule-pill ' + p.cls;
+    el.textContent = p.label;
+    strip.appendChild(el);
+  });
+ 
+  renderHistory();
+  renderExpenses();
+}
+ 
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  if (!state.history || state.history.length === 0) {
+    list.innerHTML = '<div class="empty-state">no purchases logged yet</div>';
+    return;
+  }
+  list.innerHTML = [...state.history].reverse().map(item => `
+    <div class="history-item">
+      <div>
+        <div class="name">${item.name}</div>
+        <div class="date">${item.date}</div>
+      </div>
+      <div class="right">
+        <div class="amount">-${formatMoney(item.amount)}</div>
+        <div class="history-verdict ${item.verdict}">${item.verdict.toUpperCase()}</div>
+      </div>
+    </div>
+  `).join('');
+}
+ 
+function openEdit(key) {
+  currentEditKey = key;
+  const labels = { fidelity: 'Fidelity debit balance', cash: 'Physical cash', online: 'Online account' };
+  document.getElementById('modal-title').textContent = 'Update balance';
+  document.getElementById('modal-sub').textContent = labels[key];
+  document.getElementById('modal-input').value = state[key];
+  document.getElementById('modal').classList.add('show');
+  setTimeout(() => document.getElementById('modal-input').focus(), 100);
+}
+ 
+function closeModalDirect() {
+  document.getElementById('modal').classList.remove('show');
+  currentEditKey = null;
+}
+ 
+function closeModal(e) {
+  if (e.target.id === 'modal') closeModalDirect();
+}
+ 
+function saveBalance() {
+  const val = parseFloat(document.getElementById('modal-input').value);
+  if (isNaN(val) || val < 0) { showAlert('enter a valid amount'); return; }
+  state[currentEditKey] = val;
+  state.lastUpdated = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  save();
+  render();
+  closeModalDirect();
+  showAlert('balance updated');
+}
+ 
+function switchTab(tab) {
+  ['screenshot', 'manual', 'balance'].forEach(t => {
+    document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+    document.getElementById('panel-' + t).classList.toggle('active', t === tab);
+  });
+}
+ 
+function handlePurchaseImage(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    purchaseImageData = ev.target.result.split(',')[1];
+    const zone = document.getElementById('purchase-zone');
+    zone.innerHTML = `<img src="${ev.target.result}" alt="purchase"><div class="sub">ready to analyze</div>`;
+    document.getElementById('analyze-btn').disabled = false;
+  };
+  reader.readAsDataURL(file);
+}
+ 
+function handleBalanceImage(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    balanceImageData = ev.target.result.split(',')[1];
+    const zone = document.getElementById('balance-zone');
+    zone.innerHTML = `<img src="${ev.target.result}" alt="balance"><div class="sub">ready to extract</div>`;
+    document.getElementById('balance-btn').disabled = false;
+  };
+  reader.readAsDataURL(file);
+}
+ 
+function getFinancialContext() {
+  const total = state.fidelity + state.cash + state.online;
+  const locked = total * 0.4;
+  const spendable = total * 0.6;
+  return `Cooper's current finances:
+- Fidelity debit cash: $${state.fidelity.toFixed(2)}
+- Physical cash: $${state.cash.toFixed(2)}
+- Online account: $${state.online.toFixed(2)}
+- Total liquid: $${total.toFixed(2)}
+- 40% locked buffer: $${locked.toFixed(2)} (never spend below this)
+- Available to spend: $${spendable.toFixed(2)}
+- Invested (untouchable): $${state.invested.toFixed(2)}
+- No regular income
+ 
+Rules:
+1. Never let liquid drop below the 40% floor ($${locked.toFixed(2)})
+2. Invested capital is completely off limits
+3. No income means every dollar spent is gone until replenished
+4. Flag anything that brings liquid dangerously close to the buffer`;
+}
+ 
+async function analyzePurchaseScreenshot() {
+  if (!purchaseImageData) return;
+  document.getElementById('loading-screenshot').classList.add('show');
+  document.getElementById('result-screenshot').classList.remove('show');
+  document.getElementById('analyze-btn').disabled = true;
+ 
+  try {
+    const response = await fetch(ANTHROPIC_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-calls': 'true' },
+      body: JSON.stringify({
+        model: 'claude-opus-4-5',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: purchaseImageData } },
+            { type: 'text', text: `${getFinancialContext()}
+ 
+Look at this purchase screenshot. Extract the item name and total price, then give a direct buy/wait/no verdict.
+ 
+Respond in exactly this format:
+ITEM: [item name]
+PRICE: [price]
+VERDICT: [BUY / WAIT / NO]
+REASON: [2-3 sentences max. Be direct, reference the actual numbers.]` }
+          ]
+        }]
+      })
+    });
+ 
+    const data = await response.json();
+    const text = data.content[0].text;
+    displayVerdict(text, 'result-screenshot');
+  } catch (err) {
+    document.getElementById('result-screenshot').innerHTML = '<div style="color:var(--red);font-family:var(--mono);font-size:13px">error — check api key or network</div>';
+    document.getElementById('result-screenshot').classList.add('show');
+  }
+ 
+  document.getElementById('loading-screenshot').classList.remove('show');
+  document.getElementById('analyze-btn').disabled = false;
+}
+ 
+async function analyzeManual() {
+  const name = document.getElementById('item-name').value.trim();
+  const price = parseFloat(document.getElementById('item-price').value);
+  if (!name || isNaN(price) || price <= 0) { showAlert('enter item name and price'); return; }
+ 
+  document.getElementById('loading-manual').classList.add('show');
+  document.getElementById('result-manual').classList.remove('show');
+ 
+  try {
+    const response = await fetch(ANTHROPIC_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-calls': 'true' },
+      body: JSON.stringify({
+        model: 'claude-opus-4-5',
+        max_tokens: 600,
+        messages: [{
+          role: 'user',
+          content: `${getFinancialContext()}
+ 
+Cooper wants to buy: ${name}
+Price: $${price.toFixed(2)}
+ 
+Give a direct buy/wait/no verdict.
+ 
+Respond in exactly this format:
+ITEM: ${name}
+PRICE: $${price.toFixed(2)}
+VERDICT: [BUY / WAIT / NO]
+REASON: [2-3 sentences max. Be direct, reference the actual numbers.]`
+        }]
+      })
+    });
+ 
+    const data = await response.json();
+    const text = data.content[0].text;
+    displayVerdict(text, 'result-manual');
+  } catch (err) {
+    document.getElementById('result-manual').innerHTML = '<div style="color:var(--red);font-family:var(--mono);font-size:13px">error — check network</div>';
+    document.getElementById('result-manual').classList.add('show');
+  }
+ 
+  document.getElementById('loading-manual').classList.remove('show');
+}
+ 
+async function analyzeBalance() {
+  if (!balanceImageData) return;
+  document.getElementById('loading-balance').classList.add('show');
+  document.getElementById('result-balance').classList.remove('show');
+  document.getElementById('balance-btn').disabled = true;
+ 
+  try {
+    const response = await fetch(ANTHROPIC_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-calls': 'true' },
+      body: JSON.stringify({
+        model: 'claude-opus-4-5',
+        max_tokens: 400,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: balanceImageData } },
+            { type: 'text', text: `Look at this Fidelity account screenshot. Extract the cash/available balance and the invested/portfolio balance.
+ 
+Respond in exactly this format with no extra text:
+CASH: [dollar amount, numbers only, no commas]
+INVESTED: [dollar amount, numbers only, no commas]
+ 
+If you can only find one value, use 0 for the missing one.` }
+          ]
+        }]
+      })
+    });
+ 
+    const data = await response.json();
+    const text = data.content[0].text;
+    const cashMatch = text.match(/CASH:\s*\$?([\d.]+)/i);
+    const investedMatch = text.match(/INVESTED:\s*\$?([\d.]+)/i);
+ 
+    if (cashMatch) {
+      state.fidelity = parseFloat(cashMatch[1]);
+    }
+    if (investedMatch && parseFloat(investedMatch[1]) > 0) {
+      state.invested = parseFloat(investedMatch[1]);
+    }
+ 
+    state.lastUpdated = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    save();
+    render();
+ 
+    const resultEl = document.getElementById('result-balance');
+    resultEl.className = 'ai-result show result-green';
+    resultEl.innerHTML = `<div class="verdict buy">balances updated</div><div class="ai-reasoning">Fidelity cash set to ${formatMoney(state.fidelity)}${investedMatch ? ' · Invested set to ' + formatMoney(state.invested) : ''}. Dashboard refreshed.</div>`;
+  } catch (err) {
+    document.getElementById('result-balance').innerHTML = '<div style="color:var(--red);font-family:var(--mono);font-size:13px">error reading screenshot</div>';
+    document.getElementById('result-balance').classList.add('show');
+  }
+ 
+  document.getElementById('loading-balance').classList.remove('show');
+  document.getElementById('balance-btn').disabled = false;
+}
+ 
+function displayVerdict(text, resultId) {
+  const verdictMatch = text.match(/VERDICT:\s*(BUY|WAIT|NO)/i);
+  const reasonMatch = text.match(/REASON:\s*(.+?)(?=\n[A-Z]+:|$)/is);
+  const itemMatch = text.match(/ITEM:\s*(.+)/i);
+  const priceMatch = text.match(/PRICE:\s*(.+)/i);
+  const priceNumMatch = text.match(/PRICE:\s*\$?([\d.]+)/i);
+ 
+  const verdict = verdictMatch ? verdictMatch[1].toUpperCase() : 'WAIT';
+  const reason = reasonMatch ? reasonMatch[1].trim() : text;
+  const item = itemMatch ? itemMatch[1].trim() : '—';
+  const price = priceMatch ? priceMatch[1].trim() : '—';
+  const priceNum = priceNumMatch ? parseFloat(priceNumMatch[1]) : 0;
+ 
+  const colorMap = { BUY: 'green', WAIT: 'amber', NO: 'red' };
+  const color = colorMap[verdict] || 'amber';
+ 
+  const confirmBtns = verdict !== 'NO' ? `
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border2)">
+      <div style="font-size:12px;font-family:var(--mono);color:var(--text3);margin-bottom:8px">did you actually buy this?</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" style="flex:1;padding:8px" onclick="confirmPurchase('${item.replace(/'/g,"\\'")}', ${priceNum}, '${verdict.toLowerCase()}', '${resultId}')">yes, log it</button>
+        <button class="btn-outline" style="flex:1;padding:8px" onclick="dismissConfirm('${resultId}')">no, just checking</button>
+      </div>
+    </div>` : '';
+ 
+  const resultEl = document.getElementById(resultId);
+  resultEl.className = `ai-result show result-${color}`;
+  resultEl.innerHTML = `
+    <div style="font-size:11px;font-family:var(--mono);color:var(--text3);margin-bottom:8px">${item} · ${price}</div>
+    <div class="verdict ${verdict.toLowerCase()}">${verdict}</div>
+    <div class="ai-reasoning">${reason}</div>
+    ${confirmBtns}
+  `;
+}
+ 
+function confirmPurchase(name, amount, verdict, resultId) {
+  if (!state.history) state.history = [];
+  state.history.push({
+    name, amount, verdict,
+    date: new Date().toISOString().split('T')[0]
+  });
+  state.fidelity = Math.max(0, state.fidelity - amount);
+  state.lastUpdated = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  save();
+  render();
+  const el = document.getElementById(resultId);
+  const confirmSection = el.querySelector('div:last-child');
+  if (confirmSection) confirmSection.innerHTML = `<div style="font-size:12px;font-family:var(--mono);color:var(--green);margin-top:12px;padding-top:12px;border-top:1px solid var(--border2)">logged — balance updated</div>`;
+  showAlert('purchase logged');
+}
+ 
+function dismissConfirm(resultId) {
+  const el = document.getElementById(resultId);
+  const confirmSection = el.querySelector('div:last-child');
+  if (confirmSection) confirmSection.innerHTML = `<div style="font-size:12px;font-family:var(--mono);color:var(--text3);margin-top:12px;padding-top:12px;border-top:1px solid var(--border2)">not logged — nothing changed</div>`;
+}
+ 
+function renderExpenses() {
+  const list = document.getElementById('expense-list');
+  if (!state.expenses || state.expenses.length === 0) {
+    list.innerHTML = '<div class="empty-state">no expenses added yet — tap + add</div>';
+    return;
+  }
+  const typeColor = { soon: 'var(--amber)', recurring: 'var(--blue)', future: 'var(--text3)' };
+  const typeBadge = { soon: 'badge-soon', recurring: 'badge-recurring', future: 'badge-future' };
+  list.innerHTML = state.expenses.map(e => `
+    <div class="expense-item">
+      <div>
+        <div class="name">${e.name}</div>
+        ${e.note ? `<div class="note">${e.note}</div>` : ''}
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="badge ${typeBadge[e.type]}">${e.type}</span>
+        <span style="font-family:var(--mono);font-size:14px;color:${typeColor[e.type]}">~$${e.amount}</span>
+        <button onclick="deleteExpense(${e.id})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:0 2px;line-height:1" title="remove">×</button>
+      </div>
+    </div>
+  `).join('');
+}
+ 
+let editingExpenseId = null;
+ 
+function openAddExpense() {
+  editingExpenseId = null;
+  document.getElementById('expense-modal-title').textContent = 'Add expense / goal';
+  document.getElementById('expense-name').value = '';
+  document.getElementById('expense-amount').value = '';
+  document.getElementById('expense-type').value = 'soon';
+  document.getElementById('expense-note').value = '';
+  document.getElementById('expense-modal').classList.add('show');
+  setTimeout(() => document.getElementById('expense-name').focus(), 100);
+}
+ 
+function closeExpenseModalDirect() {
+  document.getElementById('expense-modal').classList.remove('show');
+}
+ 
+function closeExpenseModal(e) {
+  if (e.target.id === 'expense-modal') closeExpenseModalDirect();
+}
+ 
+function saveExpense() {
+  const name = document.getElementById('expense-name').value.trim();
+  const amount = parseFloat(document.getElementById('expense-amount').value);
+  const type = document.getElementById('expense-type').value;
+  const note = document.getElementById('expense-note').value.trim();
+  if (!name || isNaN(amount) || amount <= 0) { showAlert('enter a name and amount'); return; }
+  if (!state.expenses) state.expenses = [];
+  const id = Date.now();
+  state.expenses.push({ id, name, amount, type, note });
+  save();
+  renderExpenses();
+  closeExpenseModalDirect();
+  showAlert('expense added');
+}
+ 
+function deleteExpense(id) {
+  state.expenses = state.expenses.filter(e => e.id !== id);
+  save();
+  renderExpenses();
+}
+ 
+function showAlert(msg) {
+  const el = document.getElementById('alert');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+ 
+render();
+</script>
+</body>
+</html>
